@@ -2,7 +2,6 @@
 - 这是基于ESP8266制作的指纹锁，采用海凌科旗下的指纹模块FPM383C，视频演示：https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff
 
 # 注意事项
-
 ![QQ截图20220803164041](https://user-images.githubusercontent.com/62107967/182564492-f9c75086-0410-4861-a62b-4fd813d54cb2.jpg)
 - 注意使用的是软串口，不是硬串口，不要看到单片机上有RX、TX就直接往上接。
 - 一定不能接错电源，V_TOUCH和VCC是接的3.3v！3.3v！3.3v！，TOUCHOUT是中断引脚，接在14口上，RX接在5口上，TX接在4口上，GND是接电源负极即GND。
