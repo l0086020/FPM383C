@@ -1,30 +1,35 @@
+/*****哔哩哔哩演示视频 https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff 里面详细介绍了这个函数的用法****/
+
 #define BLINKER_WIFI
-#include "Blinker.h"
+
+#include "Blinker.h"              //注意添加这个点灯科技的头文件，这个文件GitHub地址：https://github.com/blinker-iot/blinker-library.git
 #include "stdio.h"
 
-#include "Arduino.h"
-#include "SoftwareSerial.h"
+#include "Arduino.h"              //如果使用Arduino IDE的话，需要删除这行代码
+#include "SoftwareSerial.h"       //注意添加这个软串口头文件
 
 char auth[] = "";   //输入你的点灯科技的项目密钥
 char ssid[] = "";   //输入你的WiFi账号
 char pswd[] = "";   //输入你的WiFi密码
 
-SoftwareSerial mySerial(4,5);
-BlinkerButton Button_OneEnroll("OneEnroll");
-BlinkerButton Button_Delete("Delete");
-BlinkerButton Button_Identify("Identify");
-BlinkerButton Button_Empty("Empty");
-BlinkerButton Button_MultEnroll("MultEnroll");
-BlinkerButton Button_Reset("Reset");
-BlinkerButton Button_disconnect("disconnect");
-BlinkerButton Button_ON("ON");
-BlinkerButton Button_OFF("OFF");
+SoftwareSerial mySerial(4,5);    //软串口引脚，RX：GPIO4    TX：GPIO5
 
-char str[20];
-int SearchID,EnrollID;
-uint16_t ScanState = 0,WiFi_Connected_State = 1,ErrorNum = 0,PageID = 0;
-uint8_t Receive_State = 0,PS_ReceiveBuffer[20];
+BlinkerButton Button_OneEnroll("OneEnroll");    //单次注册按钮
+BlinkerButton Button_Delete("Delete");          //删除指纹按钮
+BlinkerButton Button_Identify("Identify");      //搜索模式按钮
+BlinkerButton Button_Empty("Empty");            //清空指纹按钮
+BlinkerButton Button_MultEnroll("MultEnroll");  //连接注册按钮
+BlinkerButton Button_Reset("Reset");            //复位模块按钮
+BlinkerButton Button_disconnect("disconnect");  //断开WiFi按钮
+BlinkerButton Button_ON("ON");                  //手动开启继电器按钮
+BlinkerButton Button_OFF("OFF");                //手动关闭继电器按钮
 
+char str[20];    //用于sprint函数的临时数组
+int SearchID,EnrollID;    //搜索指纹的ID号和注册指纹的ID号
+uint16_t ScanState = 0,WiFi_Connected_State = 1,ErrorNum = 0,PageID = 0;   //状态标志变量；WiFi是否连接状态标志位；扫描指纹错误次数标志位；输入ID号变量
+uint8_t PS_ReceiveBuffer[20];   //串口接收数据的临时缓冲数组
+
+/*******************************************************这里的数组都是手册里面的，有好几个用不到，看个人使用********************************************************/
 uint8_t PS_RegMBBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x05,0x00,0x09};
 uint8_t PS_SleepBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x33,0x00,0x37};
 uint8_t PS_EmptyBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x0D,0x00,0x11};
@@ -43,6 +48,8 @@ uint8_t PS_SearchMBBuffer[17] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x
 uint8_t PS_AutoEnrollBuffer[17] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x31,'\0','\0',0x04,0x00,0x16,'\0','\0'}; //PageID: bit 10:11，SUM: bit 15:16
 uint8_t PS_DeleteBuffer[16] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x07,0x0C,'\0','\0',0x00,0x01,'\0','\0'}; //PageID: bit 10:11，SUM: bit 14:15
 
+
+/********************************************************************以下是软串口接收发送函数的实现****************************************************************/
 void delay_ms(long int ms)
 {
   for(int i=0;i<ms;i++)
@@ -56,7 +63,10 @@ void FPM383C_SendData(int len,uint8_t PS_Databuffer[])
   mySerial.write(PS_Databuffer,len);
   mySerial.flush();
 }
+/********************************************************************以上是软串口接收发送函数的实现****************************************************************/
 
+
+/********************************************************************以下是指纹模块的功能函数的实现****************************************************************/
 void FPM383C_ReceiveData(uint16_t Timeout)
 {
   uint8_t i = 0;
@@ -100,13 +110,13 @@ uint8_t PS_GetImage()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*获取注册指纹用图像，返回应答包的位9确认码。*/
-uint8_t PS_GetEnrollImage()
-{
-  FPM383C_SendData(12,PS_GetEnrollImageBuffer);
-  FPM383C_ReceiveData(2000);
-  return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-}
+ /*获取注册指纹用图像，返回应答包的位9确认码。本例程里不需要用到这个函数，大家可以参考手册自行了解一下*/
+// uint8_t PS_GetEnrollImage()
+// {
+//   FPM383C_SendData(12,PS_GetEnrollImageBuffer);
+//   FPM383C_ReceiveData(2000);
+//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
+// }
 
 /*生成特征，存储到缓冲区1，返回应答包的位9确认码。*/
 uint8_t PS_GetChar1()
@@ -125,36 +135,36 @@ uint8_t PS_GetChar2()
 }
 
 /*生成特征，存储到缓冲区3，返回应答包的位9确认码。*/
-uint8_t PS_GetChar3()
-{
-  FPM383C_SendData(13,PS_GetChar3Buffer);
-  FPM383C_ReceiveData(2000);
-  return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-}
+// uint8_t PS_GetChar3()
+// {
+//   FPM383C_SendData(13,PS_GetChar3Buffer);
+//   FPM383C_ReceiveData(2000);
+//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
+// }
 
 /*生成特征，存储到缓冲区4，返回应答包的位9确认码。*/
-uint8_t PS_GetChar4()
-{
-  FPM383C_SendData(13,PS_GetChar4Buffer);
-  FPM383C_ReceiveData(2000);
-  return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-}
+// uint8_t PS_GetChar4()
+// {
+//   FPM383C_SendData(13,PS_GetChar4Buffer);
+//   FPM383C_ReceiveData(2000);
+//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
+// }
 
 /*合并模板，返回应答包的位9确认码。*/
-uint8_t PS_RegMB()
-{
-  FPM383C_SendData(12,PS_RegMBBuffer);
-  FPM383C_ReceiveData(2000);
-  return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-}
+// uint8_t PS_RegMB()
+// {
+//   FPM383C_SendData(12,PS_RegMBBuffer);
+//   FPM383C_ReceiveData(2000);
+//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
+// }
 
 /*存储模板，返回应答包的位9确认码。*/
-uint8_t PS_StorMB()
-{
-  FPM383C_SendData(15,PS_StorMBBuffer);
-  FPM383C_ReceiveData(2000);
-  return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-}
+// uint8_t PS_StorMB()
+// {
+//   FPM383C_SendData(15,PS_StorMBBuffer);
+//   FPM383C_ReceiveData(2000);
+//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
+// }
 
 /*搜索模板，返回应答包的位9确认码。*/
 uint8_t PS_SearchMB()
@@ -266,8 +276,12 @@ void ENROLL_ACK_CHECK(uint8_t ACK)
 	}
   for(int i=0;i<20;i++) PS_ReceiveBuffer[i] = 0xFF;
 }
+/********************************************************************以上是指纹模块的功能函数的实现****************************************************************/
 
-/*外部中断函数*/
+
+
+
+/***********************************************************************以下是外部中断函数的实现******************************************************************/
 ICACHE_RAM_ATTR void InterruptFun()
 {
   detachInterrupt(digitalPinToInterrupt(14));
@@ -275,7 +289,11 @@ ICACHE_RAM_ATTR void InterruptFun()
   delay_ms(10);
   ScanState |= 1<<4;
 }
+/***********************************************************************以上是外部中断函数的实现******************************************************************/
 
+
+
+/****************************************************************以下是点灯科技APP里面按键等组件的实现************************************************************/
 void OneEnroll_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -360,20 +378,18 @@ void DataRead(const String & data)
   PageID = data.toInt();
   ScanState |= 1<<1;
 }
+/****************************************************************以上是点灯科技APP里面按键等组件的实现************************************************************/
+
+
 
 void setup()
 {  
-  mySerial.begin(57600);
-  pinMode(2,OUTPUT);
-  pinMode(12,OUTPUT);
-  pinMode(14,INPUT);
-  digitalWrite(2,LOW);
-  delay(200);
-  digitalWrite(2,HIGH);
-  delay(200);
-  digitalWrite(2,LOW);
-  delay(200);
-  digitalWrite(2,HIGH);
+  mySerial.begin(57600);                              //软串口波特率，默认FPM383C指纹模块的57600，所以不需要动它
+
+  pinMode(2,OUTPUT);                                  //ESP8266，Builtin LED内置的灯引脚模式
+  pinMode(12,OUTPUT);                                 //继电器输出引脚
+  pinMode(14,INPUT);                                  //FPM383C的2脚TouchOUT引脚，用于外部中断
+
   Blinker.begin(auth, ssid, pswd);
   Blinker.attachData(DataRead);
   Button_OneEnroll.attach(OneEnroll_callback);
@@ -385,10 +401,12 @@ void setup()
   Button_disconnect.attach(disconnect_callback);
   Button_ON.attach(ON_callback);
   Button_OFF.attach(OFF_callback);
-  delay_ms(200);
+
+  delay_ms(200);                                      //用于FPM383C模块启动延时，不可去掉
   PS_Sleep();
   delay_ms(200);
-  attachInterrupt(digitalPinToInterrupt(14),InterruptFun,RISING);
+
+  attachInterrupt(digitalPinToInterrupt(14),InterruptFun,RISING);     //外部中断初始化
 }
 
 void loop()
