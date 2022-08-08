@@ -1,6 +1,9 @@
 # 项目简介
 - 这是基于ESP8266制作的指纹锁，采用海凌科旗下的指纹模块FPM383C，视频演示：https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff
 
+# 界面配置
+- 使用“点灯科技”App新建一个WiFi设备，点击右上角“三个点”——“界面配置”，把目录里面的json数据复制粘贴到对话框里面，点击“更新配置”，然后退出软件，再打开就可以了。
+
 # 注意事项
 ![QQ截图20220803164041](https://user-images.githubusercontent.com/62107967/182564492-f9c75086-0410-4861-a62b-4fd813d54cb2.jpg)
 - 注意使用的是软串口，不是硬串口，不要看到单片机上有RX、TX就直接往上接。
