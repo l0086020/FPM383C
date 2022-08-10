@@ -1,10 +1,9 @@
 /*****哔哩哔哩演示视频 https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff 里面详细介绍了这个函数的用法****/
-
 #define BLINKER_WIFI
 
 #include "Blinker.h"              //注意添加这个点灯科技的头文件，这个文件GitHub地址：https://github.com/blinker-iot/blinker-library.git
-#include "stdio.h"
 
+#include "stdio.h"                //这个头文件是用来使用sprint函数的
 #include "Arduino.h"              //如果使用Arduino IDE的话，需要删除这行代码
 #include "SoftwareSerial.h"       //注意添加这个软串口头文件
 
@@ -29,27 +28,47 @@ int SearchID,EnrollID;    //搜索指纹的ID号和注册指纹的ID号
 uint16_t ScanState = 0,WiFi_Connected_State = 1,ErrorNum = 0,PageID = 0;   //状态标志变量；WiFi是否连接状态标志位；扫描指纹错误次数标志位；输入ID号变量
 uint8_t PS_ReceiveBuffer[20];   //串口接收数据的临时缓冲数组
 
-/*******************************************************这里的数组都是手册里面的，有好几个用不到，看个人使用********************************************************/
-uint8_t PS_RegMBBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x05,0x00,0x09};
+
+//休眠协议
 uint8_t PS_SleepBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x33,0x00,0x37};
+
+//清空指纹协议
 uint8_t PS_EmptyBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x0D,0x00,0x11};
+
+//获取图像协议
 uint8_t PS_GetImageBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x01,0x00,0x05};
+
+//取消命令协议
 uint8_t PS_CancelBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x30,0x00,0x34};
-uint8_t PS_GetEnrollImageBuffer[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,0x29,0x00,0x2D};
+
+//生成模块协议
 uint8_t PS_GetChar1Buffer[13] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x04,0x02,0x01,0x00,0x08};
 uint8_t PS_GetChar2Buffer[13] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x04,0x02,0x02,0x00,0x09};
-uint8_t PS_GetChar3Buffer[13] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x04,0x02,0x03,0x00,0x0A};
-uint8_t PS_GetChar4Buffer[13] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x04,0x02,0x04,0x00,0x0B};
-uint8_t PS_StorMBBuffer[15] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x06,0x06,0x01,'\0','\0','\0','\0'};
+
+//RGB颜色控制协议
 uint8_t PS_BlueLEDBuffer[16] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x07,0x3C,0x03,0x01,0x01,0x00,0x00,0x49};
 uint8_t PS_RedLEDBuffer[16] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x07,0x3C,0x02,0x04,0x04,0x02,0x00,0x50};
 uint8_t PS_GreenLEDBuffer[16] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x07,0x3C,0x02,0x02,0x02,0x02,0x00,0x4C};
+
+//搜索指纹协议
 uint8_t PS_SearchMBBuffer[17] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x04,0x01,0x00,0x00,0xFF,0xFF,0x02,0x0C};
+
+//自动注册指纹协议
 uint8_t PS_AutoEnrollBuffer[17] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x31,'\0','\0',0x04,0x00,0x16,'\0','\0'}; //PageID: bit 10:11，SUM: bit 15:16
+
+//删除指纹协议
 uint8_t PS_DeleteBuffer[16] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x07,0x0C,'\0','\0',0x00,0x01,'\0','\0'}; //PageID: bit 10:11，SUM: bit 14:15
 
 
-/********************************************************************以下是软串口接收发送函数的实现****************************************************************/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   用在中断里面的延时函数
+  * @param   ms：需要延时的毫秒数
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void delay_ms(long int ms)
 {
   for(int i=0;i<ms;i++)
@@ -58,15 +77,31 @@ void delay_ms(long int ms)
   }
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   串口发送函数
+  * @param   len: 发送数组长度
+  * @param   PS_Databuffer[]: 需要发送的功能协议数组，在上面已有定义
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void FPM383C_SendData(int len,uint8_t PS_Databuffer[])
 {
   mySerial.write(PS_Databuffer,len);
   mySerial.flush();
 }
-/********************************************************************以上是软串口接收发送函数的实现****************************************************************/
 
 
-/********************************************************************以下是指纹模块的功能函数的实现****************************************************************/
+/**
+  * @file    FPM383C.cpp
+  * @brief   串口接收函数
+  * @param   Timeout：接收超时时间
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void FPM383C_ReceiveData(uint16_t Timeout)
 {
   uint8_t i = 0;
@@ -82,19 +117,43 @@ void FPM383C_ReceiveData(uint16_t Timeout)
   }
 }
 
-/*发送休眠指令，让FPM383C模块为下一次Touch中断做准备*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   休眠函数，只有发送休眠后，模块的TOUCHOUT引脚才会变成低电平
+  * @param   None
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void PS_Sleep()
 {
   FPM383C_SendData(12,PS_SleepBuffer);
 }
 
-/*控制LED灯函数，参数为LED控制数组*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   模块LED灯控制函数
+  * @param   PS_ControlLEDBuffer[]：需要设置颜色的协议，一般定义在上面
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void PS_ControlLED(uint8_t PS_ControlLEDBuffer[])
 {
   FPM383C_SendData(16,PS_ControlLEDBuffer);
 }
 
-/*取消自动注册，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   模块任务取消操作函数，如发送了注册指纹命令，但是不想注册了，需要发送此函数
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_Cancel()
 {
   FPM383C_SendData(12,PS_CancelBuffer);
@@ -102,7 +161,15 @@ uint8_t PS_Cancel()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*获取搜索指纹用图像，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   模块获取搜索指纹用的图像函数
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_GetImage()
 {
   FPM383C_SendData(12,PS_GetImageBuffer);
@@ -110,15 +177,15 @@ uint8_t PS_GetImage()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
- /*获取注册指纹用图像，返回应答包的位9确认码。本例程里不需要用到这个函数，大家可以参考手册自行了解一下*/
-// uint8_t PS_GetEnrollImage()
-// {
-//   FPM383C_SendData(12,PS_GetEnrollImageBuffer);
-//   FPM383C_ReceiveData(2000);
-//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-// }
 
-/*生成特征，存储到缓冲区1，返回应答包的位9确认码。*/
+/**
+  * @file    FPM383C.cpp
+  * @brief   模块获取图像后生成特征，存储到缓冲区1
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_GetChar1()
 {
   FPM383C_SendData(13,PS_GetChar1Buffer);
@@ -126,7 +193,15 @@ uint8_t PS_GetChar1()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*生成特征，存储到缓冲区2，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   生成特征，存储到缓冲区2
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_GetChar2()
 {
   FPM383C_SendData(13,PS_GetChar2Buffer);
@@ -134,39 +209,15 @@ uint8_t PS_GetChar2()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*生成特征，存储到缓冲区3，返回应答包的位9确认码。*/
-// uint8_t PS_GetChar3()
-// {
-//   FPM383C_SendData(13,PS_GetChar3Buffer);
-//   FPM383C_ReceiveData(2000);
-//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-// }
 
-/*生成特征，存储到缓冲区4，返回应答包的位9确认码。*/
-// uint8_t PS_GetChar4()
-// {
-//   FPM383C_SendData(13,PS_GetChar4Buffer);
-//   FPM383C_ReceiveData(2000);
-//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-// }
-
-/*合并模板，返回应答包的位9确认码。*/
-// uint8_t PS_RegMB()
-// {
-//   FPM383C_SendData(12,PS_RegMBBuffer);
-//   FPM383C_ReceiveData(2000);
-//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-// }
-
-/*存储模板，返回应答包的位9确认码。*/
-// uint8_t PS_StorMB()
-// {
-//   FPM383C_SendData(15,PS_StorMBBuffer);
-//   FPM383C_ReceiveData(2000);
-//   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
-// }
-
-/*搜索模板，返回应答包的位9确认码。*/
+/**
+  * @file    FPM383C.cpp
+  * @brief   搜索指纹模板函数
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_SearchMB()
 {
   FPM383C_SendData(17,PS_SearchMBBuffer);
@@ -174,7 +225,15 @@ uint8_t PS_SearchMB()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*清空模板，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   清空指纹模板函数
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_Empty()
 {
   FPM383C_SendData(12,PS_EmptyBuffer);
@@ -182,7 +241,15 @@ uint8_t PS_Empty()
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*自动注册模板，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   自动注册指纹模板函数
+  * @param   PageID：注册指纹的ID号，取值0 - 59
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_AutoEnroll(uint16_t PageID)
 {
   PS_AutoEnrollBuffer[10] = (PageID>>8);
@@ -194,7 +261,15 @@ uint8_t PS_AutoEnroll(uint16_t PageID)
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*删除指定模板，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   删除指定指纹模板函数
+  * @param   PageID：需要删除的指纹ID号，取值0 - 59
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_Delete(uint16_t PageID)
 {
   PS_DeleteBuffer[10] = (PageID>>8);
@@ -206,7 +281,16 @@ uint8_t PS_Delete(uint16_t PageID)
   return PS_ReceiveBuffer[6] == 0x07 ? PS_ReceiveBuffer[9] : 0xFF;
 }
 
-/*自动注册指纹函数，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   二次封装自动注册指纹函数，实现注册成功闪烁两次绿灯，失败闪烁两次红灯
+  * @param   PageID：注册指纹的ID号，取值0 - 59
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
+/*，返回应答包的位9确认码。*/
 uint8_t PS_Enroll(uint16_t PageID)
 {
   if(PS_AutoEnroll(PageID) == 0x00)
@@ -218,7 +302,15 @@ uint8_t PS_Enroll(uint16_t PageID)
   return 0xFF;
 }
 
-/*自动搜索指纹函数，返回应答包的位9确认码。*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   分步式命令搜索指纹函数
+  * @param   None
+  * @return  应答包第9位确认码或者无效值0xFF
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 uint8_t PS_Identify()
 {
   if(PS_GetImage() == 0x00)
@@ -240,7 +332,15 @@ uint8_t PS_Identify()
   return 0xFF;
 }
 
-/*应答包校验*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   搜索指纹后的应答包校验，在此执行相应的功能，如开关继电器、开关灯等等功能
+  * @param   ACK：各个功能函数返回的应答包
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void SEARCH_ACK_CHECK(uint8_t ACK)
 {
 	if(PS_ReceiveBuffer[6] == 0x07)
@@ -260,7 +360,15 @@ void SEARCH_ACK_CHECK(uint8_t ACK)
   for(int i=0;i<20;i++) PS_ReceiveBuffer[i] = 0xFF;
 }
 
-/*注册应答包校验*/
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   注册指纹后返回的应答包校验
+  * @param   ACK：注册指纹函数返回的应答包
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void ENROLL_ACK_CHECK(uint8_t ACK)
 {
 	if(PS_ReceiveBuffer[6] == 0x07)
@@ -276,12 +384,16 @@ void ENROLL_ACK_CHECK(uint8_t ACK)
 	}
   for(int i=0;i<20;i++) PS_ReceiveBuffer[i] = 0xFF;
 }
-/********************************************************************以上是指纹模块的功能函数的实现****************************************************************/
 
 
-
-
-/***********************************************************************以下是外部中断函数的实现******************************************************************/
+/**
+  * @file    FPM383C.cpp
+  * @brief   外部中断函数，触发中断后开启模块的LED蓝灯（代表正在扫描指纹），接着由搜索指纹函数修改成功（闪烁绿灯）或失败（闪烁红灯）
+  * @param   None
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 ICACHE_RAM_ATTR void InterruptFun()
 {
   detachInterrupt(digitalPinToInterrupt(14));
@@ -289,11 +401,16 @@ ICACHE_RAM_ATTR void InterruptFun()
   delay_ms(10);
   ScanState |= 1<<4;
 }
-/***********************************************************************以上是外部中断函数的实现******************************************************************/
 
 
-
-/****************************************************************以下是点灯科技APP里面按键等组件的实现************************************************************/
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 单次注册 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void OneEnroll_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -301,6 +418,15 @@ void OneEnroll_callback(const String & state)
   Blinker.notify("OneEnroll Fingerprint");
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 删除指纹 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void Delete_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -308,6 +434,15 @@ void Delete_callback(const String & state)
   Blinker.notify("Delete Fingerprint");
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 搜索模式 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void Identify_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -315,6 +450,15 @@ void Identify_callback(const String & state)
   Blinker.notify("MultSearch Fingerprint");
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 清空指纹 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void Empty_callback(const String & state)
 {
   PageID = 0;
@@ -330,6 +474,15 @@ void Empty_callback(const String & state)
   }
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 连续注册 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void MultEnroll_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -337,6 +490,15 @@ void MultEnroll_callback(const String & state)
   Blinker.notify("MultEnroll Fingerprint");
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 复位模块 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void Reset_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -347,6 +509,15 @@ void Reset_callback(const String & state)
   attachInterrupt(digitalPinToInterrupt(14),InterruptFun,RISING);
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 断开WiFi “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void disconnect_callback(const String & state)
 {
   ErrorNum = 0;
@@ -359,6 +530,15 @@ void disconnect_callback(const String & state)
   Blinker.notify("WiFi Connected");
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 手动开启 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void ON_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -366,6 +546,15 @@ void ON_callback(const String & state)
   digitalWrite(12,HIGH);
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 手动关闭 “ 按键
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void OFF_callback(const String & state)
 {
   Blinker.vibrate(500);
@@ -373,15 +562,30 @@ void OFF_callback(const String & state)
   digitalWrite(12,LOW);
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   点灯科技APP里面的 “ 对话框 “ 
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void DataRead(const String & data)
 {
   PageID = data.toInt();
   ScanState |= 1<<1;
 }
-/****************************************************************以上是点灯科技APP里面按键等组件的实现************************************************************/
 
 
-
+/**
+  * @file    FPM383C.cpp
+  * @brief   初始化主函数
+  * @param   None
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void setup()
 {  
   mySerial.begin(57600);                              //软串口波特率，默认FPM383C指纹模块的57600，所以不需要动它
@@ -409,6 +613,15 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(14),InterruptFun,RISING);     //外部中断初始化
 }
 
+
+/**
+  * @file    FPM383C.cpp
+  * @brief   主循环函数
+  * @param   Unknown
+  * @return  None
+  * @version v1.0.0
+  * @date    2022-08-10
+  */
 void loop()
 {
   switch (ScanState)
@@ -488,3 +701,12 @@ void loop()
     break;
   }
 }
+
+/*
+ * Filename: c:\Users\XTAY\Desktop\FPM383C\代码\ESP8266\src\FPM383C.cpp
+ * Path: c:\Users\XTAY\Desktop\FPM383C\代码\ESP8266\src
+ * Created Date: Monday, August 8th 2022, 7:02:49 pm
+ * Author: 世界不大我姓张
+ * 
+ * Copyright (c) 2022 Your Company
+ */
