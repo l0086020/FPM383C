@@ -1,5 +1,5 @@
 # 项目简介
-- 这是基于ESP8266制作的指纹锁，采用海凌科旗下的指纹模块FPM383C，[视频演示](https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff)
+- 这是基于ESP8266制作的指纹锁，采用海凌科旗下的指纹模块FPM383C，具体详情请观看[B站视频演示](https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff)
 - 附赠STM32实验代码
 
 # 界面配置
