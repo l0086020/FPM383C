@@ -7,7 +7,7 @@
 - 若移植到如 `Arduino Uno` 、 `Arduino Nano` 、 `89C51` 、 `STC产品` 等其他工作电压为5V的单片机，务必转换串口电平，可参考[电平转换电路](https://mp.weixin.qq.com/s/EIcMxW0amMTJZTIobH1mqA)（未验证），移植到以上平台时注意删除`Blinker`的所有相关函数，并且注意中断服务函数的要求
 - 需要注意使用的是Arduino提供的SoftwareSerial（软串口），在STM32代码中使用的是USART2
 - 务必注意电源连接，**V_TOUCH和VCC的供电为 `3.3v`**，TOUCHOUT是触摸输出引脚，连接ESP8266 GPIO_Pin_14（EXTI），RX连接GPIO_Pin_5，TX连接GPIO_Pin_4，GND接地
-- 默认是初始化不连接WiFi，因考虑在电动车上没有网络，开启WiFI会耗时，指纹识别速度会受到干扰。需要注册、删除指纹等操作的时候再来连接WiFI使用手机操作
+- 默认初始化不连接WiFi，因考虑在电动车上没有网络，循环检测WiFI会耗时，指纹识别速度会受到干扰。若需注册、删除指纹等操作时再连接WiFI使用手机操作
 - 开启WiFI连接有两种方法：1、扫描错误的指纹≥5次；2、用ID为0的指纹来开启WiFi
 - 如果初始化即连接WiFi，可将第25行的变量` WiFi_Connected_State = 1 `改为` WiFi_Connected = 0 `
 
