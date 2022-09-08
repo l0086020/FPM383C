@@ -51,7 +51,7 @@ uint8_t PS_SearchMBBuffer[17] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x08,0x
 void delay_us(uint32_t us)
 {
     uint32_t i;
-    SysTick_Config(SystemCoreClock/1000000);	//配置SysTick为10us
+    SysTick_Config(SystemCoreClock / 1000000);	//配置SysTick为10us
     for(i=0; i<us; i++)
     {
         while(!((SysTick->CTRL) & (1<<16)));	//等待计数器到0，CTRL寄存器的位16会置1，当置1时，读取该位会清0
@@ -68,7 +68,7 @@ void delay_us(uint32_t us)
 void delay_ms(uint32_t ms)
 {
     uint32_t i;
-    SysTick_Config(72000);	//配置SysTick为1ms
+    SysTick_Config(SystemCoreClock / 1000);	//配置SysTick为1ms
     for(i=0; i<ms; i++)
     {
         while(!((SysTick->CTRL) & (1<<16)));	//等待计数器到0，CTRL寄存器的位16会置1，当置1时，读取该位会清0
@@ -88,7 +88,7 @@ void FPM383C_SendData(int length,uint8_t FPM383C_Databuffer[])
 	for(int i = 0;i<length;i++)
 	{
 		USART_SendData(USART2,FPM383C_Databuffer[i]);
-		while(USART_GetFlagStatus(USART2,USART_FLAG_TXE) == RESET);
+		while(!USART_GetFlagStatus(USART2,USART_FLAG_TXE));
 	}
 	Receive_STA = 0;
 }
@@ -96,19 +96,13 @@ void FPM383C_SendData(int length,uint8_t FPM383C_Databuffer[])
 
 /**
 	* @brief	发送睡眠指令，只有发送睡眠指令后，TOUCHOUT才会变成低电平
-	* @param 	Timeout：接收数据的超时时间
-	* @return 确认码
+	* @param 	None
+	* @return None
 	*/
-uint8_t FPM383C_Sleep(uint32_t Timeout)
+void FPM383C_Sleep()
 {
 	FPM383C_SendData(12,PS_SleepBuffer);
-	while(Receive_STA<12 && (--Timeout))
-	{
-		delay_ms(1);
-	}
-	return FPM383C_ReceiveBuffer[9];
 }
-
 
 /**
 	* @brief	发送获取指纹图像指令
@@ -117,12 +111,15 @@ uint8_t FPM383C_Sleep(uint32_t Timeout)
 	*/
 uint8_t FPM383C_GetImage(uint32_t Timeout)
 {
+	uint8_t Temp;
 	FPM383C_SendData(12,PS_GetImageBuffer);
 	while(Receive_STA<12 && (--Timeout))
 	{
 		delay_ms(1);
 	}
-	return FPM383C_ReceiveBuffer[9];
+	Temp = (FPM383C_ReceiveBuffer[6] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF);
+	for(uint8_t i=0;i<20;i++) FPM383C_ReceiveBuffer[i] = 0xFF;
+	return Temp;
 }
 
 
@@ -133,30 +130,16 @@ uint8_t FPM383C_GetImage(uint32_t Timeout)
 	*/
 uint8_t FPM383C_GenChar1(uint32_t Timeout)
 {
+	uint8_t Temp;
 	FPM383C_SendData(13,PS_GetChar1Buffer);
 	while(Receive_STA<12 && (--Timeout))
 	{
 		delay_ms(1);
 	}
-	return FPM383C_ReceiveBuffer[9];
+	Temp = (FPM383C_ReceiveBuffer[6] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF);
+	for(uint8_t i=0;i<20;i++) FPM383C_ReceiveBuffer[i] = 0xFF;
+	return Temp;
 }
-
-
-/**
-	* @brief	发送生成模板指令，暂时未用到
-	* @param 	Timeout：接收数据的超时时间
-	* @return 确认码
-	*/
-uint8_t FPM383C_GenChar2(uint32_t Timeout)
-{
-	FPM383C_SendData(13,PS_GetChar2Buffer);
-	while(Receive_STA<12 && (--Timeout))
-	{
-		delay_ms(1);
-	}
-	return FPM383C_ReceiveBuffer[9];
-}
-
 
 /**
 	* @brief	发送搜索指纹指令
@@ -165,12 +148,15 @@ uint8_t FPM383C_GenChar2(uint32_t Timeout)
 	*/
 uint8_t FPM383C_SearchMB(uint32_t Timeout)
 {
+	uint8_t Temp;
 	FPM383C_SendData(17,PS_SearchMBBuffer);
 	while(Receive_STA<16 && (--Timeout))
 	{
 		delay_ms(1);
 	}
-	return FPM383C_ReceiveBuffer[9];
+	Temp = (FPM383C_ReceiveBuffer[8] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF);
+	for(uint8_t i=0;i<20;i++) FPM383C_ReceiveBuffer[i] = 0xFF;
+	return Temp;
 }
 
 
@@ -181,12 +167,15 @@ uint8_t FPM383C_SearchMB(uint32_t Timeout)
 	*/
 uint8_t FPM383C_Empty(uint32_t Timeout)
 {
+	uint8_t Temp;
 	FPM383C_SendData(12,PS_EmptyBuffer);
 	while(Receive_STA<12 && (--Timeout))
 	{
 		delay_ms(1);
 	}
-	return FPM383C_ReceiveBuffer[9];
+	Temp = (FPM383C_ReceiveBuffer[6] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF);
+	for(uint8_t i=0;i<20;i++) FPM383C_ReceiveBuffer[i] = 0xFF;
+	return Temp;
 }
 
 
@@ -214,11 +203,8 @@ uint8_t FPM383C_Identify()
 		{
 			if(FPM383C_SearchMB(2000) == 0x00)
 			{
-				if(FPM383C_ReceiveBuffer[8] == 0x07 && FPM383C_ReceiveBuffer[9] == 0x00)
-				{
-					FPM383C_ControlLED(PS_GreenLEDBuffer);
-					return FPM383C_ReceiveBuffer[9];
-				}
+				FPM383C_ControlLED(PS_GreenLEDBuffer);
+				return FPM383C_ReceiveBuffer[6] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF;
 			}
 		}
 	}
@@ -246,7 +232,7 @@ uint8_t FPM383C_Enroll(uint16_t PageID,uint16_t Timeout)
 	if(FPM383C_ReceiveBuffer[9] == 0x00)
 	{
 		FPM383C_ControlLED(PS_GreenLEDBuffer);
-		return FPM383C_ReceiveBuffer[9];
+		return FPM383C_ReceiveBuffer[6] == 0x07 ? FPM383C_ReceiveBuffer[9] : 0xFF;
 	}
 	else if(Timeout == 0)
 	{
@@ -280,42 +266,6 @@ void ACK(uint8_t ack)
 				delay_ms(50);
 				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
 				break;
-			case 0x01:
-				printf("数据包接收错误，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
-			case 0x02:
-				printf("传感器上没有手指，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
-			case 0x03:
-				printf("扫描图像失败，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
-			case 0x08:
-				printf("指纹不匹配，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
-			case 0x09:
-				printf("未搜索到指纹，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
-			case 0x0A:
-				printf("特征合并失败，回传数据 : 0x0%x\r\n",ack);
-				GPIO_SetBits(GPIOC,GPIO_Pin_0);
-				delay_ms(500);
-				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-				break;
 			default :
 				printf("未知错误，回传数据 : 0x0%x\r\n",ack);
 				GPIO_SetBits(GPIOC,GPIO_Pin_0);
@@ -323,11 +273,9 @@ void ACK(uint8_t ack)
 				GPIO_ResetBits(GPIOC,GPIO_Pin_0);
 				break;
 		}
-		delay_ms(500);
+		for(int i=0;i<20;i++) FPM383C_ReceiveBuffer[i] = 0xFF;
 	}
 }
-
-
 
 /**
 	* @brief	中断向量函数，里面配置所需要的中断功能
@@ -338,18 +286,18 @@ void NVIC_Config(void)
 {
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
-	NVIC_SetPriorityGrouping(NVIC_PriorityGroup_2);
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
 
 	NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStructure);
 	
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_Init(&NVIC_InitStructure);
 }
 
@@ -400,8 +348,6 @@ void USART_2_Config(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2,ENABLE);
 	
-	NVIC_Config();
-	
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
@@ -422,10 +368,6 @@ void USART_2_Config(void)
 	USART_ITConfig(USART2,USART_IT_RXNE,ENABLE);
 
 	USART_Cmd(USART2,ENABLE);
-	
-	delay_ms(200);
-	
-	FPM383C_Sleep(1);
 }
 
 
@@ -441,9 +383,7 @@ void FPM383C_GPIO_Interrupt_Config()
 	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
-	
-	NVIC_Config();
-	
+
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC,GPIO_PinSource13);
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13;
@@ -464,8 +404,10 @@ void FPM383C_GPIO_Interrupt_Config()
 	*/
 void FPM383C_Init(void)
 {
+	NVIC_Config();
 	USART_1_Config();
 	USART_2_Config();
+	FPM383C_Sleep();
 	FPM383C_GPIO_Interrupt_Config();
 }
 
@@ -491,14 +433,15 @@ void EXTI15_10_IRQHandler(void)
 	if (EXTI_GetITStatus(EXTI_Line13) != RESET)
 	{
 		EXTI_ClearITPendingBit(EXTI_Line13);
+		
 		FPM383C_ControlLED(PS_BlueLEDBuffer);
-		GPIO_SetBits(GPIOC,GPIO_Pin_0);
-		delay_ms(50);
-		GPIO_ResetBits(GPIOC,GPIO_Pin_0);
-		//ACK(FPM383C_Identify());		//验证指纹模式
-		ACK(FPM383C_Enroll(0,10000));		//注册指纹模式
+		
+		ACK(FPM383C_Identify());						//验证指纹模式
+		//ACK(FPM383C_Enroll(15,10000));		//注册指纹模式
+		
+		delay_ms(1000);
 	}
-	FPM383C_Sleep(1);
+	FPM383C_Sleep();
 }
 
 
@@ -515,10 +458,12 @@ void USART2_IRQHandler(void)
 		res = USART_ReceiveData(USART2);
 		if((Receive_STA & (1 << 15)) == 0)
 		{
-			if(Receive_STA<20)
+			if(Receive_STA < 20)
 			{
-				FPM383C_ReceiveBuffer[Receive_STA++]=res;
-			}else{
+				FPM383C_ReceiveBuffer[Receive_STA++] = res;
+			}
+			else
+			{
 				Receive_STA |= (1<<15);
 			}
 		}
