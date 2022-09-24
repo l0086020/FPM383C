@@ -1,7 +1,7 @@
 # 项目简介
 - [BiliBili视频演示](https://www.bilibili.com/video/BV1jB4y1h7Jz?share_source=copy_web&vd_source=a87486ca7ecd0a754606aaf5b7b2b5ff)
 - 基于ESP8266主控、FPM383C指纹模块制作的简易电动车指纹锁
-- STM32参考代码可正常注册及验证，目前尚有BUG存在，待修复
+- STM32参考代码可通过串口调试进行指纹的注册、验证以及删除等操作，具体的操作说明可以自己研究一下最底下的FPM383C_Loop函数或者去B站底下留言。
 
 # 注意事项
 - 若移植到如 `Arduino Uno` 、 `Arduino Nano` 、 `AT89C52` 、 `STC产品` 等其他工作电压为5V的单片机，务必转换串口电平，可参考[电平转换电路](https://mp.weixin.qq.com/s/EIcMxW0amMTJZTIobH1mqA)（未验证），移植到以上平台时注意删除`Blinker`的所有相关函数，并且注意中断服务函数的要求
