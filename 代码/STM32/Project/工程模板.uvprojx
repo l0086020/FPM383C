@@ -398,6 +398,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\main.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_it.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\stm32f10x_it.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -1,6 +1,8 @@
 .\objects\fpm383c.o: ..\App\FPM383C.c
 .\objects\fpm383c.o: ..\App\FPM383C.h
 .\objects\fpm383c.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdio.h
+.\objects\fpm383c.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdlib.h
+.\objects\fpm383c.o: C:\Keil\ARM\ARMCC\Bin\..\include\String.h
 .\objects\fpm383c.o: ..\CMSIS\stm32f10x.h
 .\objects\fpm383c.o: ..\CMSIS\core_cm3.h
 .\objects\fpm383c.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdint.h

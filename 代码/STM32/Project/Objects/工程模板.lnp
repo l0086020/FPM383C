@@ -1,6 +1,7 @@
 --cpu Cortex-M3
 ".\objects\fpm383c.o"
 ".\objects\main.o"
+".\objects\stm32f10x_it.o"
 ".\objects\misc.o"
 ".\objects\stm32f10x_gpio.o"
 ".\objects\stm32f10x_usart.o"

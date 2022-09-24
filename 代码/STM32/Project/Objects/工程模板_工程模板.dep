@@ -1,8 +1,10 @@
 Dependencies for Project '工程模板', Target '工程模板': (DO NOT MODIFY !)
 CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
-F (..\App\FPM383C.c)(0x631A4F1F)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\fpm383c.o --omf_browse .\objects\fpm383c.crf --depend .\objects\fpm383c.d)
-I (..\App\FPM383C.h)(0x631A46FC)
+F (..\App\FPM383C.c)(0x631E006E)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\fpm383c.o --omf_browse .\objects\fpm383c.crf --depend .\objects\fpm383c.d)
+I (..\App\FPM383C.h)(0x631DB702)
 I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x60252374)
+I (C:\Keil\ARM\ARMCC\include\stdlib.h)(0x60252374)
+I (C:\Keil\ARM\ARMCC\include\String.h)(0x6025237E)
 I (..\CMSIS\stm32f10x.h)(0x6314AC6B)
 I (..\CMSIS\core_cm3.h)(0x6314AC6B)
 I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x6025237E)
@@ -13,7 +15,7 @@ I (..\Library\inc\stm32f10x_gpio.h)(0x6314AC6B)
 I (..\Library\inc\stm32f10x_rcc.h)(0x6314AC6B)
 I (..\Library\inc\stm32f10x_usart.h)(0x6314AC6B)
 I (..\Library\inc\misc.h)(0x6314AC6B)
-F (..\User\main.c)(0x631A459E)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
+F (..\User\main.c)(0x631D9CB1)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\main.o --omf_browse .\objects\main.crf --depend .\objects\main.d)
 I (..\CMSIS\stm32f10x.h)(0x6314AC6B)
 I (..\CMSIS\core_cm3.h)(0x6314AC6B)
 I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x6025237E)
@@ -24,8 +26,22 @@ I (..\Library\inc\stm32f10x_gpio.h)(0x6314AC6B)
 I (..\Library\inc\stm32f10x_rcc.h)(0x6314AC6B)
 I (..\Library\inc\stm32f10x_usart.h)(0x6314AC6B)
 I (..\Library\inc\misc.h)(0x6314AC6B)
-I (..\App\FPM383C.h)(0x631A46FC)
+I (..\App\FPM383C.h)(0x631DB702)
 I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x60252374)
+I (C:\Keil\ARM\ARMCC\include\stdlib.h)(0x60252374)
+I (C:\Keil\ARM\ARMCC\include\String.h)(0x6025237E)
+F (..\User\stm32f10x_it.c)(0x631D9C05)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\stm32f10x_it.o --omf_browse .\objects\stm32f10x_it.crf --depend .\objects\stm32f10x_it.d)
+I (..\User\stm32f10x_it.h)(0x6239DC29)
+I (..\CMSIS\stm32f10x.h)(0x6314AC6B)
+I (..\CMSIS\core_cm3.h)(0x6314AC6B)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x6025237E)
+I (..\CMSIS\system_stm32f10x.h)(0x6314AC6B)
+I (..\User\stm32f10x_conf.h)(0x6314AC6B)
+I (..\Library\inc\stm32f10x_exti.h)(0x6314AC6B)
+I (..\Library\inc\stm32f10x_gpio.h)(0x6314AC6B)
+I (..\Library\inc\stm32f10x_rcc.h)(0x6314AC6B)
+I (..\Library\inc\stm32f10x_usart.h)(0x6314AC6B)
+I (..\Library\inc\misc.h)(0x6314AC6B)
 F (..\Library\src\misc.c)(0x6314AC6B)(--c99 -c --cpu Cortex-M3 -D__MICROLIB -g -O0 --apcs=interwork --split_sections -I ..\App -I ..\CMSIS -I ..\Library\inc -I ..\User-IC:\Users\XTAY\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include-D__UVISION_VERSION="536" -DSTM32F10X_HD -DUSE_STDPERIPH_DRIVER -DUSE_STM32F10X_HD-o .\objects\misc.o --omf_browse .\objects\misc.crf --depend .\objects\misc.d)
 I (..\Library\inc\misc.h)(0x6314AC6B)
 I (..\CMSIS\stm32f10x.h)(0x6314AC6B)

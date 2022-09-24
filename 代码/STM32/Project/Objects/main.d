@@ -12,3 +12,5 @@
 .\objects\main.o: ..\Library\inc\misc.h
 .\objects\main.o: ..\App\FPM383C.h
 .\objects\main.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdio.h
+.\objects\main.o: C:\Keil\ARM\ARMCC\Bin\..\include\stdlib.h
+.\objects\main.o: C:\Keil\ARM\ARMCC\Bin\..\include\String.h
