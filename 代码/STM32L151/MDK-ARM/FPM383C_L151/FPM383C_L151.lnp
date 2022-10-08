@@ -1,0 +1,28 @@
+--cpu Cortex-M3
+"fpm383c_l151\fpm383c.o"
+"fpm383c_l151\main.o"
+"fpm383c_l151\gpio.o"
+"fpm383c_l151\usart.o"
+"fpm383c_l151\stm32l1xx_it.o"
+"fpm383c_l151\stm32l1xx_hal_msp.o"
+"fpm383c_l151\startup_stm32l151xb.o"
+"fpm383c_l151\stm32l1xx_hal_tim.o"
+"fpm383c_l151\stm32l1xx_hal_tim_ex.o"
+"fpm383c_l151\stm32l1xx_hal_uart.o"
+"fpm383c_l151\stm32l1xx_hal.o"
+"fpm383c_l151\stm32l1xx_hal_rcc.o"
+"fpm383c_l151\stm32l1xx_hal_rcc_ex.o"
+"fpm383c_l151\stm32l1xx_hal_flash.o"
+"fpm383c_l151\stm32l1xx_hal_flash_ex.o"
+"fpm383c_l151\stm32l1xx_hal_flash_ramfunc.o"
+"fpm383c_l151\stm32l1xx_hal_gpio.o"
+"fpm383c_l151\stm32l1xx_hal_dma.o"
+"fpm383c_l151\stm32l1xx_hal_pwr.o"
+"fpm383c_l151\stm32l1xx_hal_pwr_ex.o"
+"fpm383c_l151\stm32l1xx_hal_cortex.o"
+"fpm383c_l151\stm32l1xx_hal_exti.o"
+"fpm383c_l151\system_stm32l1xx.o"
+--library_type=microlib --strict --scatter "FPM383C_L151\FPM383C_L151.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "FPM383C_L151.map" -o FPM383C_L151\FPM383C_L151.axf

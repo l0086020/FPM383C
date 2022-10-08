@@ -7,9 +7,9 @@
 #include "Arduino.h"              //如果使用Arduino IDE的话，需要删除这行代码
 #include "SoftwareSerial.h"       //注意添加这个软串口头文件
 
-char auth[] = "";   //输入你的点灯科技的项目密钥
-char ssid[] = "";   //输入你的WiFi账号
-char pswd[] = "";   //输入你的WiFi密码
+char auth[] = "c81b1354693d";   //输入你的点灯科技的项目密钥
+char ssid[] = "Smart Home";   //输入你的WiFi账号
+char pswd[] = "321162955";   //输入你的WiFi密码
 
 SoftwareSerial mySerial(4,5);    //软串口引脚，RX：GPIO4    TX：GPIO5
 
@@ -25,7 +25,7 @@ BlinkerButton Button_OFF("OFF");                //手动关闭继电器按钮
 
 char str[20];    //用于sprint函数的临时数组
 int SearchID,EnrollID;    //搜索指纹的ID号和注册指纹的ID号
-uint16_t ScanState = 0,WiFi_Connected_State = 1,ErrorNum = 0,PageID = 0;   //状态标志变量；WiFi是否连接状态标志位；扫描指纹错误次数标志位；输入ID号变量
+uint16_t ScanState = 0,WiFi_Connected_State = 0,ErrorNum = 0,PageID = 0;   //状态标志变量；WiFi是否连接状态标志位；扫描指纹错误次数标志位；输入ID号变量
 uint8_t PS_ReceiveBuffer[20];   //串口接收数据的临时缓冲数组
 
 
