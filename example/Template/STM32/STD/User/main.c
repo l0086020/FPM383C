@@ -1,5 +1,7 @@
 #include "main.h"
 
+/* 需使用Keil的V5编译器，另外程序还没有完全移植过来，先不要使用STD库 */
+
 void FPM_Main(FPM_HandlerTypeDef *hfpm);
 extern FPM_HandlerTypeDef g_fpmStructure;
 
