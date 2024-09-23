@@ -4,12 +4,12 @@
 #include "main.h"
 
 /*  */
-void STM32_NVIC_Config(void);
+void STM32_GPIO_Init(void);
 /*  */
-void USART_2_Config(void);
+void STM32_NVIC_Init(void);
 /*  */
-void USART_3_Config(void);
+void STM32_USART2_Init(void);
 /*  */
-void GPIO_Interrupt_Config(void);
+void STM32_EXTI_Init(void);
 
 #endif

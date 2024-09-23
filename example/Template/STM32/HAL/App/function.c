@@ -115,15 +115,19 @@ void FPM_Main(FPM_HandlerTypeDef *hfpm)
 		g_TrigFlag = 0;
 		/* 显示蓝灯 */
 		FPM_ControlLED(hfpm, PS_BlueLEDBuffer);
+		
 		/* 指纹采集并校验 */
 		FPM_Identify(hfpm);
 //		FPM_Enroll(hfpm, 0, 5000);
+		
 		/* 等待指纹模块进入睡眠 */
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))
+		do
 		{
-			HAL_Delay(100);
 			FPM_Sleep(hfpm);
+			HAL_Delay(100);
 		}
+		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0));
+		
 		/* 必须先清除中断标志位，再开启外部中断，否则会因为指纹模块睡眠-唤醒状态改变而再次触发中断 */
 		__HAL_GPIO_EXTI_CLEAR_IT(TRIG_PIN_Pin);
 		HAL_NVIC_EnableIRQ(TRIG_PIN_EXTI_IRQn);
