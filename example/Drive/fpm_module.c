@@ -40,12 +40,45 @@ uint8_t PS_ValidTemplateNum[12] = {0xEF,0x01,0xFF,0xFF,0xFF,0xFF,0x01,0x00,0x03,
 /* Private functions ---------------------------------------------------------*/
 /**
   * @brief	指纹验证成功后用户逻辑代码实现，该函数弱定义，建议外部重写
-  * @param 	None
+  * @brief  阻塞式，建议在函数体中操作任务标志位，具体任务实现另写函数判断标志位状态
+  * @param 	MatchID：由指纹模块调用该函数并返回验证成功的指纹ID号
   * @return None
   */
-__weak void FPM_TrigEvenCallback(void)
+__weak void FPM_SuccessEventCallback(uint16_t MatchID)
 {
 	/* UNUSED */
+	
+	/* Please improve the following code ****
+	
+			if(MatchID == 0)
+				Function_1;
+			else if(MatchID == 1)
+				Function_2;
+			else if(MatchID == 2)
+				...
+			else
+				Function_N;
+	
+			---- or ----
+			
+			switch(MatchID)
+			{
+				case 0:
+					Function_1;
+					break;
+	
+				case 0:
+					Function_2;
+					break;
+					
+				...
+				
+				default:
+					Function_N;
+					break;
+			}
+			
+	*/
 }
 
 
@@ -132,7 +165,7 @@ static uint8_t FPM_WorkFlow(FPM_HandlerTypeDef *hfpm, uint8_t *pBuff, uint8_t si
 	sum[0] = FPM_Cmd_CheckSum(hfpm->pRecvBuff, *hfpm->pRecvCnt);
 	sum[1] = (hfpm->pRecvBuff[*hfpm->pRecvCnt-2] << 8) + hfpm->pRecvBuff[*hfpm->pRecvCnt-1];
 	
-	return ((sum[0] == sum[1]) ? hfpm->pRecvBuff[9] : FPM_ERR);
+	return sum[0] == sum[1] ? hfpm->pRecvBuff[9] : FPM_ERR;
 }
 
 
@@ -233,21 +266,19 @@ uint8_t FPM_Delete(FPM_HandlerTypeDef *hfpm, uint16_t PageID)
 uint16_t FPM_Identify(FPM_HandlerTypeDef *hfpm)
 {
 	uint16_t MatchID;
-	if(FPM_GetImage(hfpm) == FPM_OK)
+	
+	/* 蓝灯常亮 */
+	FPM_ControlLED(hfpm, PS_BlueLEDBuffer);
+	/* 判断验证状态 */
+	if((FPM_GetImage(hfpm) == FPM_OK) && (FPM_GenChar1(hfpm) == FPM_OK) && (FPM_SearchMB(hfpm) == FPM_OK))
 	{
-		if(FPM_GenChar1(hfpm) == FPM_OK)
-		{
-			if(FPM_SearchMB(hfpm) == FPM_OK)
-			{
-				/* 计算指纹ID */
-				MatchID = (hfpm->pRecvBuff[10] << 8) + hfpm->pRecvBuff[11];
-				/* 执行用户程序 */
-				FPM_TrigEvenCallback();
-				/* 闪烁两次绿灯 */
-				FPM_ControlLED(hfpm, PS_GreenLEDBuffer);
-				return	MatchID;
-			}
-		}
+		/* 计算指纹ID */
+		MatchID = (hfpm->pRecvBuff[10] << 8) + hfpm->pRecvBuff[11];
+		/* 闪烁两次绿灯 */
+		FPM_ControlLED(hfpm, PS_GreenLEDBuffer);
+		/* 验证成功即执行用户程序 */
+		FPM_SuccessEventCallback(MatchID);
+		return MatchID;
 	}
 	/* 任一环节失败即为失败 闪烁两次红灯 */
 	FPM_ControlLED(hfpm, PS_RedLEDBuffer);
@@ -278,7 +309,6 @@ uint8_t FPM_Enroll(FPM_HandlerTypeDef *hfpm, uint16_t g_PageID, uint16_t Timeout
 	
 	/* 蓝灯常亮 */
 	FPM_ControlLED(hfpm, PS_BlueLEDBuffer);
-	
 	/* 判断注册状态 */
 	if(FPM_WorkFlow(hfpm, EnrollBuff, 17, Timeout) == FPM_OK)
 	{

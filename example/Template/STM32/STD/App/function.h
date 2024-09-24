@@ -2,6 +2,7 @@
 #define __FUNCTION_H
 
 #include "main.h"
+#include "stdbool.h"
 #include "fpm_module.h"
 
 extern FPM_HandlerTypeDef g_fpmStructure;

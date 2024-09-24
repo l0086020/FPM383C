@@ -3,10 +3,9 @@
 uint8_t g_MatchScore, g_RecvFlag, g_RecvCnt, g_TrigFlag, g_RecvBuff[50]; 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	用于FPM模块的串口发送函数，请根据函数原型定义该函数
+  * @param 	None
+  * @return None
   */
 void FPM_Send_Data(uint8_t *pData, uint8_t size)
 {
@@ -16,10 +15,9 @@ void FPM_Send_Data(uint8_t *pData, uint8_t size)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	用于FPM模块的串口接收函数，不管如何操作串口，该函数都需定义，函数体可为空
+  * @param 	None
+  * @return None
   */
 void FPM_Read_Data(uint8_t *pData)
 {
@@ -64,23 +62,25 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	指纹验证成功回调函数。简单功能可直接实现，复杂功能需操作标志位，另写实现函数
+  * @param 	MatchID：返回的指纹ID信息
+  * @return None
   */
-void FPM_TrigEvenCallback(void)
+void FPM_SuccessEventCallback(uint16_t MatchID)
 {
-	/* LED状态灯翻转 */
-	GPIOB->ODR ^= 1<<9;
+	if(MatchID == 0)
+		GPIOB->ODR ^= 1<<1;			/* LED状态灯翻转 */
+	else if(MatchID == 1)
+		GPIOB->ODR |= 1<<1;			/* LED状态灯关闭 */
+	else if(MatchID == 2)
+		GPIOB->ODR &= ~(1<<1);	/* LED状态灯打开 */
 }
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	FPM模块初始化函数，用于指定所需的延时函数、串口发送接收函数以及缓冲区及标志位等
+  * @param 	hfpm：操作指纹模块的句柄结构体
+  * @return None
   */
 void FPM_Init(FPM_HandlerTypeDef *hfpm)
 {
@@ -102,10 +102,9 @@ void FPM_Init(FPM_HandlerTypeDef *hfpm)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	FPM模块主函数，函数体内的do...while是为了让手指长时接触模块松开后可靠进入休眠模式，建议加上，同时下方的中断标志位也如此
+  * @param 	hfpm：操作指纹模块的句柄结构体
+  * @return None
   */
 void FPM_Main(FPM_HandlerTypeDef *hfpm)
 {
@@ -113,9 +112,7 @@ void FPM_Main(FPM_HandlerTypeDef *hfpm)
 	{
 		/* 清除触发中断标志位 */
 		g_TrigFlag = 0;
-		/* 显示蓝灯 */
-		FPM_ControlLED(hfpm, PS_BlueLEDBuffer);
-		
+
 		/* 指纹采集并校验 */
 		FPM_Identify(hfpm);
 //		FPM_Enroll(hfpm, 0, 5000);
@@ -126,7 +123,7 @@ void FPM_Main(FPM_HandlerTypeDef *hfpm)
 			FPM_Sleep(hfpm);
 			HAL_Delay(100);
 		}
-		while(HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0));
+		while(HAL_GPIO_ReadPin(TRIG_PIN_GPIO_Port, TRIG_PIN_Pin));
 		
 		/* 必须先清除中断标志位，再开启外部中断，否则会因为指纹模块睡眠-唤醒状态改变而再次触发中断 */
 		__HAL_GPIO_EXTI_CLEAR_IT(TRIG_PIN_Pin);

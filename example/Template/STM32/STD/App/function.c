@@ -39,23 +39,9 @@ void delay_ms(uint32_t ms)
 
 
 /**
-	* @brief	printf重映射函数，重映射后可以直接使用printf函数，并直接打印到USART3串口上
-	* @param 	unknow
-	* @return unknow
-	*/
-int fputc(int ch,FILE *f)
-{
-	USART_SendData(USART3,(uint8_t)ch);
-	while(!USART_GetFlagStatus(USART3,USART_FLAG_TXE));
-	return ch;
-}
-
-
-/**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	用于FPM模块的串口发送函数，请根据函数原型定义该函数
+  * @param 	None
+  * @return None
   */
 void FPM_Send_Data(uint8_t *pData, uint8_t size)
 {
@@ -69,10 +55,9 @@ void FPM_Send_Data(uint8_t *pData, uint8_t size)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	用于FPM模块的串口接收函数，不管如何操作串口，该函数都需定义，函数体可为空
+  * @param 	None
+  * @return None
   */
 void FPM_Read_Data(uint8_t *pData)
 {
@@ -82,23 +67,25 @@ void FPM_Read_Data(uint8_t *pData)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	指纹验证成功回调函数。简单功能可直接实现，复杂功能需操作标志位，另写实现函数
+  * @param 	MatchID：返回的指纹ID信息
+  * @return None
   */
-void FPM_TrigEvenCallback(void)
+void FPM_SuccessEventCallback(uint16_t MatchID)
 {
-	/* LED状态灯翻转 */
-	GPIOB->ODR ^= 1<<1;
+	if(MatchID == 0)
+		GPIOB->ODR ^= 1<<1;			/* LED状态灯翻转 */
+	else if(MatchID == 1)
+		GPIOB->ODR |= 1<<1;			/* LED状态灯关闭 */
+	else if(MatchID == 2)
+		GPIOB->ODR &= ~(1<<1);	/* LED状态灯打开 */
 }
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	FPM模块初始化函数，用于指定所需的延时函数、串口发送接收函数以及缓冲区及标志位等
+  * @param 	hfpm：操作指纹模块的句柄结构体
+  * @return None
   */
 void FPM_Init(FPM_HandlerTypeDef *hfpm)
 {
@@ -120,10 +107,9 @@ void FPM_Init(FPM_HandlerTypeDef *hfpm)
 
 
 /**
-  * @brief	
-  * @param 	
-  * @param	
-  * @return 
+  * @brief	FPM模块主函数，函数体内的do...while是为了让手指长时接触模块松开后可靠进入休眠模式，建议加上，同时下方的中断标志位也如此
+  * @param 	hfpm：操作指纹模块的句柄结构体
+  * @return None
   */
 void FPM_Main(FPM_HandlerTypeDef *hfpm)
 {
@@ -131,9 +117,7 @@ void FPM_Main(FPM_HandlerTypeDef *hfpm)
 	{
 		/* 清除触发中断标志位 */
 		g_TrigFlag = 0;
-		/* 显示蓝灯 */
-		FPM_ControlLED(hfpm, PS_BlueLEDBuffer);
-		
+
 		/* 指纹采集并校验 */
 		FPM_Identify(hfpm);
 //		FPM_Enroll(hfpm, 0, 5000);

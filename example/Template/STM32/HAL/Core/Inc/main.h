@@ -60,7 +60,7 @@ void Error_Handler(void);
 #define TRIG_PIN_Pin GPIO_PIN_0
 #define TRIG_PIN_GPIO_Port GPIOA
 #define TRIG_PIN_EXTI_IRQn EXTI0_IRQn
-#define LED_PIN_Pin GPIO_PIN_9
+#define LED_PIN_Pin GPIO_PIN_1
 #define LED_PIN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
